@@ -37,17 +37,6 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", async (event) => {
   const req = event.request;
 
-  if (req.mode === "navigate") {
-    console.log("Handling navigation request for", req);
-    event.respondWith(
-      (async () => {
-        const cached = await caches.match(req);
-        return cached;
-      })(),
-    );
-    return;
-  }
-
   // Static assets: cache-first
   event.respondWith(
     (async () => {

@@ -19,6 +19,8 @@ Script (JavaScript) ที่ทำงานอยู่เบื้องหล
 
 # Service Worker Lifecycle
 
+Register &rarr; Install &rarr; Activate &rarr; Fetch
+
 1. Register
    ขั้นตอนนี้จะเป็นการลงทะเบียนใช้งาน Service Worker ทำให้ Web Browser ทราบว่าเว็บไซต์นี้จะมีการใช้งาน Service Worker
 2. Install
@@ -90,18 +92,6 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", async (event) => {
   const req = event.request;
 
-  if (req.mode === "navigate") {
-    console.log("Handling navigation request for", req);
-    event.respondWith(
-      (async () => {
-        const cached = await caches.match(req);
-        return cached;
-
-      })(),
-    );
-    return;
-  }
-
   // Static assets: cache-first
   event.respondWith(
     (async () => {
@@ -121,9 +111,10 @@ self.addEventListener("fetch", async (event) => {
     })(),
   );
 });
+
 ```
 
 3. เปิด Web browser inspector ขึ้นมาแล้วคลิกไปที่แท็ป _"Application"_ ดูที่หัวข้อ _"Service Worker"_ จะพบว่าได้มี service ที่เราขียนถูก register แล้ว
    ![Registered Service Worker](./assets/workshop-2-1.png)
 4. จากนั้นลองดูที่หัวข้อ _"Cache storage"_ จะมีข้อมูลที่เราได้ cached ไว้
-   ![Cached Data](./assets/workshop-2-1.png)
+   ![Cached Data](./assets/workshop-2-2.png)
