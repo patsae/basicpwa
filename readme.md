@@ -29,6 +29,8 @@
 | Access Device APIs |    ❌    |    ⚠     |        ✅         |
 | App Store Required |    ❌    |   ❌\*   |        ✅         |
 
+_\*การใช้งาน PWA บน Safari หรือบน IOS อาจถูกจำกัด feature บางอย่าง_
+
 # Core Building Blocks of PWA
 
 เพื่อให้ PWA สามารถทำงานได้เหมือนกับ Native App จะมี 4 ส่วนหลักดังนี้
