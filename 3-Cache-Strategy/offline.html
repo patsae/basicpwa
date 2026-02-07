@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=Y, initial-scale=1.0">
+    <title>My First PWA</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&icon_names=globe_2_cancel" />
+    <style type="text/tailwindcss">
+        body{
+        @apply bg-gray-200 h-dvh flex flex-col justify-center items-center;
+      }
+
+      h1{
+        @apply font-bold text-3xl text-indigo-500;
+      }
+
+      .card{
+        @apply bg-white shadow-md hover:shadow-lg rounded-md p-5
+      }
+    </style>
+</head>
+
+<body>
+    <span class="material-symbols-outlined text-red-500">
+        globe_2_cancel
+    </span>
+    <h1>You're Offline</h1>
+    <p>It looks like you've lost your internet connection.<br>Please check your network and try again.</p>
+    <button
+        class="bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 text-white rounded-full cursor-pointer my-5 px-4 py-2 text-lg w-1/12"
+        onclick="window.location.href='index.html'">Retry</button>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
