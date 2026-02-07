@@ -8,8 +8,6 @@
 2. ระบุข้อมูลที่จำเป็นในรูปแบบ json ซึ่งประกอบด้วย name (ชื่อแอป), icons (ไอคอน), start_url (URL หน้าแรกเมื่อเปิด), display (รูปแบบการแสดงผล เช่น standalone)
 3. เขียนคำสั่งเชื่อมโยงไฟล์ manifest.json เข้ากับส่วนหัว (Header) ของเว็บไซต์ เพื่อให้ทุกหน้าแสดงผลเป็นแอปได้
 
-`<link rel="manifest" href="manifest.json" />`
-
 # Property ที่ใช้บ่อย
 
 - name : ชื่อเต็มของแอป (จะโชว์ตอนระบบถามว่า "คุณจะติดตั้งแอปนี้ไหม?")
@@ -30,29 +28,39 @@
 
 1. สร้างไฟล์ manifest.json ไว้ที่ root project
 2. ระบุข้อมูลที่จำเป็นในรูปแบบ json
-   `   {
-"name": "My First PWA",
-"short_name": "FirstPWA",
-"start_url": "/index.html",
-"display": "standalone",
-"background_color": "#ffffff",
-"theme_color": "indigo",
-"icons": [
-{
-"src": "icon-96.png",
-"sizes": "96x96",
-"type": "image/png"
-},
-{
-"src": "icon-256.png",
-"sizes": "256x256",
-"type": "image/png"
-}
-]
-}`
+
+   ```
+   {
+      "name": "My First PWA",
+      "short_name": "FirstPWA",
+      "start_url": "/index.html",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "indigo",
+      "icons": [
+         {
+         "src": "icon-96.png",
+         "sizes": "96x96",
+         "type": "image/png"
+         },
+         {
+         "src": "icon-256.png",
+         "sizes": "256x256",
+         "type": "image/png"
+         }
+      ]
+   }
+
+   ```
 
 3. เชื่อมโยงไฟล์ manifest.json เข้ากับส่วนหัว (Header) ของเว็บไซต์
-   `<link rel="manifest" href="manifest.json" />`
+
+   ```
+
+   <link rel="manifest" href="manifest.json" />
+
+   ```
+
 4. เปิด Web browser inspector ขึ้นมาแล้วคลิกไปที่แท็ป _"Application"_ จะพบข้อมูลเว็บไซต์ตามที่เราได้ระบุไปใน manifest.json
    ![Web App Manifest](./assets/workshop-1-1.png)
 5. สังเกตุที่แถบ url จะปรากฏไอคอน Install Web App ของเรา ให้คลิกแล้วทำการติดตั้ง
