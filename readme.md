@@ -34,12 +34,15 @@
 เพื่อให้ PWA สามารถทำงานได้เหมือนกับ Native App จะมี 4 ส่วนหลักดังนี้
 
 1. Service Worker คือ Script (JavaScript) ที่ทำงานอยู่เบื้องหลัง (Background Process) ทำหน้าที่เป็น Proxy คอยดักจับการส่งข้อมูลระหว่างเบราว์เซอร์กับเซิร์ฟเวอร์ คอยตรวจสอบการเชื่อมต่อว่าเป็น **"Online"** หรือ **"Offline"** ถ้าเป็น Offline มันจะไปดึงข้อมูลจาก Cache มาให้แทนที่จะปล่อยให้หน้าเว็บแสดง Offline
-2. Caching คือการเก็บไฟล์ (HTML, CSS, JS, Images) หรือข้อมูลจาก API ไว้ในหน่วยความจำของเครื่องผู้ใช้โดยตรงผ่าน Cache API **ไว้ใช้ตอน Offline** ทำให้ครั้งต่อไปที่เปิดแอป ข้อมูลจะถูกดึงจากเครื่องเราเอง ไม่ต้องรอโหลดผ่านเน็ต
+2. Caching & IndexedDB คือการเก็บไฟล์ (HTML, CSS, JS, Images) หรือข้อมูลจาก API ไว้ในหน่วยความจำของเครื่องผู้ใช้โดยตรงผ่าน Cache API **ไว้ใช้ตอน Offline** ทำให้ครั้งต่อไปที่เปิดแอป ข้อมูลจะถูกดึงจากเครื่องเราเอง ไม่ต้องรอโหลดผ่านเน็ต
 3. App Manifest คือไฟล์ JSON เล็กๆ ใช้อธิบายข้อมูลสำคัญของแอปพลิเคชัน เช่น ชื่อ, ไอคอน, เวอร์ชั่น, และการตั้งค่าพื้นฐาน เพื่อบอกระบบปฏิบัติการ (Android/iOS) หรือเบราว์เซอร์ (สำหรับ PWA) ทราบว่าแอปนั้นทำงานอย่างไรและแสดงผลรูปแบบใด
 4. Background Sync เป็นฟีเจอร์ที่ทำงานร่วมกับ Service Worker เพื่อจัดการเรื่องการส่งข้อมูลตอนระบบ Offline หน้าที่ของ Background Sync คือเมื่อเกิดการ Offline Service Worker จะเก็บข้อมูลนั้นไว้ในคิว (Queue) และ รอจนกว่าเน็ตจะกลับมา แล้วค่อยส่งข้อมูลขึ้น Server ให้โดยอัตโนมัติ
 
 # ตารางลำดับเนื้อหา
 
-| ลำดับ | เนื้อหา      |                                ลิ้งค์                                 |
-| :---: | :----------- | :-------------------------------------------------------------------: |
-|   1   | App manifest | [Link](https://github.com/patsae/basicpwa/tree/master/1-App-Manifest) |
+| ลำดับ | เนื้อหา        |                                 ลิ้งค์                                  |
+| :---: | :------------- | :---------------------------------------------------------------------: |
+|   1   | App manifest   |  [Link](https://github.com/patsae/basicpwa/tree/master/1-App-Manifest)  |
+|   2   | Service Worker | [Link](https://github.com/patsae/basicpwa/tree/master/2-Service-Worker) |
+|   3   | Cache Strategy | [Link](https://github.com/patsae/basicpwa/tree/master/3-Cache-Strategy) |
+|   4   | IndexedDB      |   [Link](https://github.com/patsae/basicpwa/tree/master/4-IndexedDB)    |
