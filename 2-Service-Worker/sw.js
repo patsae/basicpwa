@@ -3,7 +3,13 @@
 const CACHE_NAME = "my-cached-v1";
 
 // เราจะ precache หน้าเพจ,CDN และ resource ต่างๆที่จำเป็น เพื่อให้การทำงานใน mode offline แล้วยังสามารถใช้งานได้
-const PRECACHE_URLS = ["/", "index.html"];
+const PRECACHE_URLS = [
+  "/",
+  "index.html",
+  "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4",
+  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info",
+  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&icon_names=globe_2_cancel",
+];
 
 //Install
 self.addEventListener("install", (event) => {

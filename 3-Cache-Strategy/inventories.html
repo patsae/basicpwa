@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info" />
+    <style type="text/tailwindcss">
+        body{
+        @apply bg-gray-200;
+      }
+
+      h1,h2{
+        @apply font-bold text-indigo-500;
+      }
+
+      h1{
+        @apply text-3xl;
+      }
+
+      h2{
+        @apply text-2xl;
+      }
+
+      .card{
+        @apply bg-white shadow-md hover:shadow-lg rounded-md p-5
+      }
+    </style>
+</head>
+
+<body>
+    <div class="w-full px-2.5 py-4 flex items-center justify-between bg-indigo-500 text-white">
+        <div>
+            <a href="index.html" class="font-bold">ระบบพัสดุ</a>
+        </div>
+        <nav class="flex items-center gap-3">
+            <a href="index.html">Home</a>
+            <a href="inventories.html">Inventory</a>
+            <a href="about-us.html">About us</a>
+            <a href="contact-us.html">Contact us</a>
+            <a href="user.html">User</a>
+        </nav>
+    </div>
+
+    <div class="w-3/4 mt-5 mx-auto">
+        <div class="flex items-center justify-between">
+            <h2 class="flex items-center gap-2">
+                <span class="material-symbols-outlined">
+                    info
+                </span>
+                รายการสินค้า
+            </h2>
+            <button id="btnReload"
+                class="bg-blue-400 hover:bg-blue-500 transition-color duration-200 rounded-md border-none text-center text-white px-2.5 py-1.5 cursor-pointer"
+                onclick="load()">
+                รีโหลด
+            </button>
+        </div>
+
+        <div id="inventories" class="w-full mt-5 mb-10 flex flex-wrap items-stretch justify-start gap-20"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+
+        const inventories = document.getElementById("inventories");
+        const products = [];
+
+        async function load() {
+            inventories.innerHTML = `
+                <div class="w-full text-center">
+                    <h1>กำลังโหลดข้อมูล...</h1>
+                </div>
+            `
+
+
+            const res = await fetch("https://dummyjson.com/products?limit=20&select=id,title,description,price,stock,thumbnail")
+            const json = await res.json();
+
+            if (json.products.length > 0) {
+                products.splice(0, products.length, ...json.products);
+            }
+
+            render(products)
+        }
+
+        function render(products) {
+            if (products.length === 0) {
+                return;
+            }
+
+            inventories.innerHTML = '';
+
+            products.forEach(product => {
+                inventories.innerHTML += `
+                    <div class="w-1/5 card flex flex-col gap-3">
+                        <img src="${product.thumbnail}" class="w-full" />
+                        <hr class="border-b border-gray-200" />
+                        <p><b>${product.title}</b></p>
+                        <p class="text-justify indent-10 min-h-48 max-h-48 overflow-y-hidden">${product.description}</p>
+                        <hr class="border-b border-gray-200" />
+                        <div class="flex items-center justify-between">
+                            <p><b>$:</b> ${product.price}</p>    
+                            <p>Qty: ${product.stock}</p>
+                        </div>
+                    </div>
+                `
+            });
+        }
+
+        load();
+    </script>
+</body>
+
+</html>

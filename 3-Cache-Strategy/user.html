@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random User</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info" />
+    <style type="text/tailwindcss">
+        body{
+        @apply bg-gray-200;
+      }
+
+      h1,h2{
+        @apply font-bold text-indigo-500;
+      }
+
+      h1{
+        @apply text-3xl;
+      }
+
+      h2{
+        @apply text-2xl;
+      }
+
+      .card{
+        @apply bg-white shadow-md hover:shadow-lg rounded-md p-5
+      }
+    </style>
+</head>
+
+<body>
+    <div class="w-full px-2.5 py-4 flex items-center justify-between bg-indigo-500 text-white">
+        <div>
+            <a href="index.html" class="font-bold">ระบบพัสดุ</a>
+        </div>
+        <nav class="flex items-center gap-3">
+            <a href="index.html">Home</a>
+            <a href="inventories.html">Inventory</a>
+            <a href="about-us.html">About us</a>
+            <a href="contact-us.html">Contact us</a>
+            <a href="user.html">User</a>
+        </nav>
+    </div>
+
+    <div class="w-2/5 mt-5 mb-10 mx-auto">
+
+        <div class="w-full card flex flex-col gap-3">
+            <div class="w-full">
+                <img id="userImg" class="rounded-full mx-auto hover:shadow-md" />
+                <hr class="border-b border-gray-200 my-2" />
+            </div>
+            <div class="text-left">
+                <p><b>Name: </b><span id="userName"></span></p>
+                <p><b>Gender: </b><span id="userGender"></span></p>
+                <p><b>Age: </b><span id="userAge"></span></p>
+                <p><b>Email: </b><span id="userEmail"></span></p>
+                <p><b>Phone: </b><span id="userPhone"></span></p>
+            </div>
+        </div>
+
+        <div class="w-full card flex flex-col gap-3 mt-5">
+            <button id="btnReload"
+                class="w-fit bg-blue-400 hover:bg-blue-500 transition-color duration-200 rounded-md border-none text-center text-white px-2.5 py-1.5 cursor-pointer mx-auto my-5"
+                onclick="load()">
+                รีโหลด
+            </button>
+
+            <p><b>Stale-While-Revalidate</b></p>
+            <p class="indent-8">จะแสดงข้อมูลจาก Cache ให้ผู้ใช้งานเห็นทันทีในลำดับแรก จากนั้น Service Worker
+                จะดึงข้อมูลล่าสุดจาก Server/API เบื้องหลังเพื่อมาอัพเดทข้อมูลใน Cache และหน้าเพจให้เป็นปัจจุบัน</p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+
+        const userImg = document.getElementById("userImg");
+        const userName = document.getElementById("userName");
+        const userGender = document.getElementById("userGender");
+        const userAge = document.getElementById("userAge");
+        const userEmail = document.getElementById("userEmail");
+        const userPhone = document.getElementById("userPhone");
+
+        // กัน reload ซ้ำๆ
+        let reloading = false;
+
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.addEventListener("message", async (event) => {
+                console.log(event.data?.type)
+                if (event.data?.type === "USER_API_UPDATED") {
+                    if (reloading) return;
+                    reloading = true;
+
+                    // ✅ Re-render with new data immediately
+                    if (event.data?.data) {
+                        const api = JSON.parse(event.data.data);
+                        render(api.results[0]);
+                    } else {
+                        // Fallback: re-fetch
+                        await load();
+                    }
+
+                    setTimeout(() => reloading = false, 1000);
+                }
+            });
+        }
+
+        async function load() {
+            const res = await fetch("https://randomuser.me/api");
+            const json = await res.json();
+
+            if (json && json.results.length > 0) {
+                render(json.results[0]);
+            }
+        }
+
+        function render(user) {
+            userImg.src = user.picture.large
+            userImg.title = `${user.name.title} ${user.name.first} ${user.name.last}`
+            userName.innerHTML = `${user.name.title}${user.name.first} ${user.name.last}`;
+            userGender.innerHTML = user.gender;
+            userAge.innerHTML = user.dob.age;
+            userEmail.innerHTML = user.email;
+            userPhone.innerHTML = user.phone;
+        }
+
+        load()
+    </script>
+</body>
+
+</html>

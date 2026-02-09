@@ -38,8 +38,10 @@
         </div>
         <nav class="flex items-center gap-3">
             <a href="index.html">Home</a>
+            <a href="inventories.html">Inventory</a>
             <a href="about-us.html">About us</a>
             <a href="contact-us.html">Contact us</a>
+            <a href="user.html">User</a>
         </nav>
     </div>
 
@@ -85,6 +87,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
