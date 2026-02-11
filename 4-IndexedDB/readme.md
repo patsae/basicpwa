@@ -354,3 +354,6 @@ async function saveToIndexDb(product) {
 </script>
 
 ```
+
+ทดลองใช้เว็บไซต์ทั้งใน mode online และ offiline
+หากต้องการดูข้อมูลใน indexedDB สามารถดูได้เองจาก Browser DevTools กด F12 หรือคลิกขวาเลือก Inspect แล้วไปที่แถบ (Tab) Application ที่เมนูด้านซ้าย มองหาหัวข้อ Storage > IndexedDB จะเห็นชื่อฐานข้อมูลที่เราสร้าง
