@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info" />
+    <style type="text/tailwindcss">
+        body{
+        @apply bg-gray-200;
+      }
+
+      h1,h2{
+        @apply font-bold text-indigo-500;
+      }
+
+      h1{
+        @apply text-3xl;
+      }
+
+      h2{
+        @apply text-2xl;
+      }
+
+      .card{
+        @apply bg-white shadow-md hover:shadow-lg rounded-md p-5
+      }
+    </style>
+</head>
+
+<body>
+
+    <div class="w-full px-2.5 py-4 flex items-center justify-between bg-indigo-500 text-white">
+        <div>
+            <a href="index.html" class="font-bold">ระบบพัสดุ</a>
+        </div>
+        <nav class="flex items-center gap-3">
+            <a href="index.html">Home</a>
+            <a href="inventories.html">Inventory</a>
+        </nav>
+    </div>
+
+    <div class="w-3/4 mt-5 mx-auto">
+        <div id="output" class="w-full card flex items-start gap-4">
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+
+        //ประกาศฐานข้อมูล indexedDB
+        const DB_NAME = "PWAInventoryDB";
+        const DB_VERSION = 1;
+
+        //ประกาศชื่อตารางที่จะใช้เก็บข้อมูล
+        const STORE_NAME = "products";
+
+        const output = document.getElementById("output");
+        const urlParams = new URLSearchParams(window.location.search);
+        const { id } = Object.fromEntries(urlParams.entries());
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            await load(id);
+        });
+
+        async function load(id) {
+            output.innerHTML = `
+                <div class="w-full text-center">
+                    <h1>กำลังโหลดข้อมูล...</h1>
+                </div>
+            `;
+
+            const dbs = await window.indexedDB.databases();
+            const exists = dbs.some(db => db.name === DB_NAME);
+
+            if (exists) {
+                const product = await getAllFromIndexedDB(Number(id));
+
+                if (product) {
+                    render(product);
+                } else {
+                    const product = await fetchProducApi(id);
+                    render(product);
+
+                    if (product) {
+                        await saveToIndexDb(product)
+                    }
+                }
+
+            } else {
+                const product = await fetchProducApi(id);
+
+                render(product);
+                if (product) {
+                    await saveToIndexDb(product)
+                }
+            }
+        }
+
+        async function fetchProducApi(id) {
+            const res = await fetch(`https://dummyjson.com/products/${id}?select=id,title,description,price,stock,thumbnail`);
+            return await res.json();
+        }
+
+        function render(product) {
+            if (product) {
+                output.innerHTML = `
+                    <div>
+                        <img src="${product.thumbnail}"
+                            class="rounded-md border border-gray-200">
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <p><b>รหัสสินค้า: </b> ${product.id}</p>
+                        <p><b>ชื่อสินค้า: </b> ${product.title}</p>
+                        <p><b>รายละเอียด: </b> ${product.description}</p>
+                        <p><b>จำนวน: </b> ${product.stock}</p>
+                        <p><b>ราคา: </b> ${product.price}</p>
+                    </div>
+                `;
+            } else {
+                output.innerHTML = `
+                    <div class="w-full text-center text-gray-400 italic">ไม่พบรายการสินค้า</div>
+                `
+            }
+        }
+
+        // Open IndexedDB database
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        //กำหนดให้ primary key คือ id
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                        store.createIndex("status", "status", { unique: false });
+                    }
+                };
+            });
+        }
+
+        // get product by id
+        async function getAllFromIndexedDB(id) {
+            const db = await openDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], "readonly");
+                const store = transaction.objectStore(STORE_NAME);
+
+                const request = store.get(id);
+
+                request.onsuccess = () => {
+                    if (request.result) {
+                        console.log("พบข้อมูลสินค้า:", request.result);
+                        resolve(request.result);
+                    } else {
+                        console.log("ไม่พบสินค้าที่มี ID นี้");
+                        resolve(null);
+                    }
+                };
+
+                request.onerror = () => {
+                    console.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
+                    reject(request.error);
+                };
+
+                // ปิดการเชื่อมต่อเมื่อจบงาน
+                transaction.oncomplete = () => db.close();
+            });
+        };
+
+
+        // Save product to IndexedDB
+        async function saveToIndexDb(product) {
+            if (!product) {
+                return;
+            }
+
+            const db = await openDB();
+
+            return new Promise((resolve, reject) => {
+                // 1. เปิด Transaction แบบ readwrite ครั้งเดียวสำหรับทุกรายการ
+                const transaction = db.transaction([STORE_NAME], "readwrite");
+                const store = transaction.objectStore(STORE_NAME);
+
+                // 2. นำสินค้าใส่ลงใน Store
+                store.add(product);
+
+                // 3. รอให้ Transaction ทำงานเสร็จสิ้น
+                transaction.oncomplete = () => {
+                    console.log("บันทึกสินค้าเรียบร้อยแล้ว");
+                    db.close();
+                    resolve();
+                };
+
+                transaction.onerror = () => {
+                    console.error("เกิดข้อผิดพลาดในการบันทึก");
+                    reject(transaction.error);
+                };
+
+                transaction.oncomplete = () => db.close();
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info" />
+    <style type="text/tailwindcss">
+        body{
+        @apply bg-gray-200;
+      }
+
+      h1,h2{
+        @apply font-bold text-indigo-500;
+      }
+
+      h1{
+        @apply text-3xl;
+      }
+
+      h2{
+        @apply text-2xl;
+      }
+
+      .card{
+        @apply bg-white shadow-md hover:shadow-lg rounded-md p-5
+      }
+    </style>
+</head>
+
+<body>
+    <div class="w-full px-2.5 py-4 flex items-center justify-between bg-indigo-500 text-white">
+        <div>
+            <a href="index.html" class="font-bold">ระบบพัสดุ</a>
+        </div>
+        <nav class="flex items-center gap-3">
+            <a href="index.html">Home</a>
+            <a href="inventories.html">Inventory</a>
+        </nav>
+    </div>
+
+    <div class="w-3/4 mt-5 mx-auto">
+        <div class="flex items-center justify-between">
+            <h2 class="flex items-center gap-2">
+                <span class="material-symbols-outlined">
+                    info
+                </span>
+                รายการสินค้า
+            </h2>
+            <button id="btnReload"
+                class="bg-blue-400 hover:bg-blue-500 transition-color duration-200 rounded-md border-none text-center text-white px-2.5 py-1.5 cursor-pointer"
+                onclick="load()">
+                รีโหลด
+            </button>
+        </div>
+
+        <div id="inventories" class="w-full mt-5 mb-10 flex flex-wrap items-stretch justify-start gap-20"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script>
+        // Register Service Worker
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register("./sw.js");
+                    console.log("SW registered:", reg.scope);
+                } catch (err) {
+                    console.warn("SW registration failed:", err);
+                }
+            });
+        }
+
+        //ประกาศฐานข้อมูล indexedDB
+        const DB_NAME = "PWAInventoryDB";
+        const DB_VERSION = 1;
+
+        //ประกาศชื่อตารางที่จะใช้เก็บข้อมูล
+        const STORE_NAME = "products";
+
+        const inventories = document.getElementById("inventories");
+        const products = [];
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            await load();
+        });
+
+        async function load() {
+            inventories.innerHTML = `
+                <div class="w-full text-center">
+                    <h1>กำลังโหลดข้อมูล...</h1>
+                </div>
+            `;
+            const dbs = await window.indexedDB.databases();
+            const exists = dbs.some(db => db.name === DB_NAME);
+
+            if (exists) {
+                console.log("load data from indexedDB");
+
+                const all = await getAllFromIndexedDB();
+
+                if (all.length > 0) {
+                    products.splice(0, products.length, ...all);
+                } else {
+                    const res = await fetchProducApi();
+
+                    if (res.products.length > 0) {
+                        products.splice(0, products.length, ...res.products);
+                        await saveAllToIndexDb(products);
+                    }
+                }
+
+            } else {
+                console.log("load data from api");
+
+                const res = await fetchProducApi();
+
+                if (res.products.length > 0) {
+                    products.splice(0, products.length, ...res.products);
+                    await saveAllToIndexDb(products);
+                }
+            }
+
+            render(products);
+        }
+
+        async function fetchProducApi() {
+            const res = await fetch("https://dummyjson.com/products?limit=20&select=id,title,description,price,stock,thumbnail");
+            return await res.json();
+        }
+
+        function render(products) {
+            if (products.length === 0) {
+                return;
+            }
+
+            inventories.innerHTML = '';
+
+            products.forEach(product => {
+                inventories.innerHTML += `
+                    <div class="w-1/5 card flex flex-col gap-3">
+                        <a href="detail.html?id=${product.id}">
+                            <img src="${product.thumbnail}" class="w-full" />    
+                        </a>                        
+                        <hr class="border-b border-gray-200" />
+                        <p><a href="detail.html?id=${product.id}"><b>${product.title}</b></a></p>
+                        <p class="text-justify indent-10 min-h-48 max-h-48 overflow-y-hidden">${product.description}</p>
+                        <hr class="border-b border-gray-200" />
+                        <div class="flex items-center justify-between">
+                            <p><b>$:</b> ${product.price}</p>    
+                            <p>Qty: ${product.stock}</p>
+                        </div>
+                    </div>
+                `
+            });
+        }
+
+        // Open IndexedDB database
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        //กำหนดให้ primary key คือ id
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                        store.createIndex("status", "status", { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Get all items from IndexedDB
+        const getAllFromIndexedDB = async () => {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], "readonly");
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+
+                transaction.oncomplete = () => db.close();
+            });
+        };
+
+        // Save product to IndexedDB
+        async function saveAllToIndexDb(products) {
+            if (products.length === 0) {
+                return;
+            }
+
+            const db = await openDB();
+
+            return new Promise((resolve, reject) => {
+                // 1. เปิด Transaction แบบ readwrite ครั้งเดียวสำหรับทุกรายการ
+                const transaction = db.transaction([STORE_NAME], "readwrite");
+                const store = transaction.objectStore(STORE_NAME);
+
+                // 2. วนลูปเพื่อนำสินค้าแต่ละชิ้นใส่ลงใน Store
+                products.forEach((item) => {
+                    store.add(item);
+                })
+
+                // 3. รอให้ Transaction ทำงานเสร็จสิ้นทั้งหมด
+                transaction.oncomplete = () => {
+                    console.log("บันทึกสินค้าทั้งหมดเรียบร้อยแล้ว");
+                    db.close();
+                    resolve();
+                };
+
+                transaction.onerror = () => {
+                    console.error("เกิดข้อผิดพลาดในการบันทึก");
+                    reject(transaction.error);
+                };
+
+                transaction.oncomplete = () => db.close();
+            });
+        }
+    </script>
+</body>
+
+</html>
